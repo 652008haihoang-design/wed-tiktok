@@ -1,0 +1,145 @@
+# wed-tiktok
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Săn Xu TikTok Live - Tìm Phòng Xu Cao Nhất</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background: #0f0c20; color: #fff; min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    
+    /* Box Nhập Key */
+    .key-box { background: #1a1638; padding: 30px; border-radius: 12px; text-align: center; border: 1px solid #3d3470; margin-top: 50px; }
+    .key-box h2 { color: #fe2c55; margin-bottom: 15px; }
+    .key-box input { width: 80%; max-width: 400px; padding: 12px; border-radius: 6px; border: 1px solid #3d3470; background: #0f0c20; color: white; font-size: 16px; text-align: center; }
+    .key-box button { padding: 12px 25px; border-radius: 6px; border: none; background: #fe2c55; color: white; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 15px; }
+    .key-box button:hover { background: #e02648; }
+
+    /* Nội dung Tool */
+    .tool-box { display: none; }
+    .header-tool { text-align: center; margin-bottom: 25px; }
+    .header-tool h1 { color: #25f4ee; margin-bottom: 5px; }
+    
+    .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+    .search-bar button { padding: 12px; background: #25f4ee; color: #000; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; flex: 1; }
+
+    .live-card { background: #1a1638; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2d265a; }
+    .live-info h3 { color: #fff; margin-bottom: 5px; }
+    .live-info p { color: #aaa; font-size: 14px; }
+    .coin-tag { background: #ffb800; color: #000; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 16px; }
+    .btn-join { background: #fe2c55; color: white; text-decoration: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; margin-left: 10px; display: inline-block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- KHUNG XÁC THỰC KEY -->
+    <div id="key-screen" class="key-box">
+      <h2>YÊU CẦU KÍCH HOẠT KEY</h2>
+      <p style="color: #ccc; margin-bottom: 15px;">Vui lòng nhập Key mua từ Admin để sử dụng tool tìm Live TikTok săn xu.</p>
+      <input type="text" id="user-key" placeholder="Nhập mã Key của bạn...">
+      <br>
+      <button onclick="verifyKey()">Kích Hoạt Ngay</button>
+      <p id="key-msg" style="margin-top: 15px; font-size: 14px;"></p>
+    </div>
+
+    <!-- KHUNG CÔNG CỤ TÌM LIVE TIKTOK (Chỉ hiện khi nhập đúng Key) -->
+    <div id="tool-screen" class="tool-box">
+      <div class="header-tool">
+        <h1>TIKTOK LIVE COIN FINDER</h1>
+        <p>Danh sách các phòng Live TikTok đang phát Rương / Xu lớn nhất</p>
+      </div>
+
+      <div class="search-bar">
+        <button onclick="scanTikTokLive()">Quét Phòng Live Xu Cao (Refresh)</button>
+      </div>
+
+      <div id="live-results">
+        <!-- Kết quả mô phỏng các phòng live -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Kiểm tra Key đã kích hoạt trước đó chưa
+    window.onload = function() {
+      const activeKey = localStorage.getItem('active_user_key');
+      if (activeKey && isKeyValid(activeKey)) {
+        showTool();
+      }
+    };
+
+    function isKeyValid(key) {
+      const keys = JSON.parse(localStorage.getItem('tiktok_keys') || '{}');
+      if (!keys[key]) return false;
+
+      const expireDate = new Date(keys[key]);
+      const now = new Date();
+      return expireDate > now;
+    }
+
+    function verifyKey() {
+      const inputKey = document.getElementById('user-key').value.trim();
+      const msg = document.getElementById('key-msg');
+
+      if (!inputKey) {
+        msg.style.color = '#ff4d4d';
+        msg.innerText = 'Vui lòng nhập Key!';
+        return;
+      }
+
+      if (isKeyValid(inputKey)) {
+        localStorage.setItem('active_user_key', inputKey);
+        msg.style.color = '#4cd137';
+        msg.innerText = 'Kích hoạt thành công! Đang chuyển hướng...';
+        setTimeout(showTool, 1000);
+      } else {
+        msg.style.color = '#ff4d4d';
+        msg.innerText = 'Key không hợp lệ hoặc đã hết hạn!';
+      }
+    }
+
+    function showTool() {
+      document.getElementById('key-screen').style.display = 'none';
+      document.getElementById('tool-screen').style.display = 'block';
+      scanTikTokLive();
+    }
+
+    // Mô phỏng tính năng quét Live TikTok có nhiều xu
+    function scanTikTokLive() {
+      const resultsContainer = document.getElementById('live-results');
+      resultsContainer.innerHTML = '<p style="text-align: center; color: #aaa;">Đang quét các phòng Live trên TikTok...</p>';
+
+      setTimeout(() => {
+        // Dữ liệu mẫu danh sách live xu cao
+        const mockLives = [
+          { user: '@kenh_san_xu_01', title: 'Phát rương lớn 5000 Xu mỗi 5 phút', coins: '5.000 Xu', url: 'https://www.tiktok.com' },
+          { user: '@game_show_live', title: 'Săn rương xu khủng - Vào nhặt ngay', coins: '2.500 Xu', url: 'https://www.tiktok.com' },
+          { user: '@idol_tiktok_88', title: 'PK Thả rương xu liên tục', coins: '1.200 Xu', url: 'https://www.tiktok.com' },
+          { user: '@tong_kho_giare', title: 'Tặng rương tri ân người xem', coins: '800 Xu', url: 'https://www.tiktok.com' }
+        ];
+
+        resultsContainer.innerHTML = '';
+        mockLives.forEach(live => {
+          const item = document.createElement('div');
+          item.className = 'live-card';
+          item.innerHTML = `
+            <div class="live-info">
+              <h3>${live.user}</h3>
+              <p>${live.title}</p>
+            </div>
+            <div>
+              <span class="coin-tag">🎁 ${live.coins}</span>
+              <a href="${live.url}" target="_blank" class="btn-join">Vào Live</a>
+            </div>
+          `;
+          resultsContainer.appendChild(item);
+        });
+      }, 800);
+    }
+  </script>
+</body>
+</html>
